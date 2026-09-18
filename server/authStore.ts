@@ -26,7 +26,11 @@ export interface StoredUser {
 
 export type SafeUser = Omit<StoredUser, "passwordHash">;
 
-const DATA_DIR = path.join(process.cwd(), "data");
+let inMemoryUsers: StoredUser[] | null = null;
+
+const DATA_DIR = process.env.VERCEL
+  ? path.join("/tmp", "data")
+  : path.join(process.cwd(), "data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 
 // In-memory token store: token -> { userId: string; expiresAt: number }
@@ -54,15 +58,18 @@ export function verifyPassword(password: string, storedHash: string): boolean {
 }
 
 function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch (err) {
+    console.warn("Could not create data dir:", err);
   }
 }
 
-function loadUsers(): StoredUser[] {
-  ensureDataDir();
-  if (!fs.existsSync(USERS_FILE)) {
-    const adminUser: StoredUser = {
+function getDefaultUsers(): StoredUser[] {
+  return [
+    {
       id: "usr-admin-humoyun",
       username: "humoyun_fjx",
       fullName: "Khumoyun (Admin)",
@@ -80,46 +87,49 @@ function loadUsers(): StoredUser[] {
       status: "active",
       createdAt: new Date().toISOString(),
       lastLoginAt: null,
-    };
-    saveUsers([adminUser]);
-    return [adminUser];
+    },
+  ];
+}
+
+function loadUsers(): StoredUser[] {
+  if (inMemoryUsers && inMemoryUsers.length > 0) {
+    return inMemoryUsers;
   }
 
   try {
+    ensureDataDir();
+    if (!fs.existsSync(USERS_FILE)) {
+      const defaults = getDefaultUsers();
+      saveUsers(defaults);
+      return defaults;
+    }
+
     const content = fs.readFileSync(USERS_FILE, "utf-8");
     const parsed = JSON.parse(content);
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      const adminUser: StoredUser = {
-        id: "usr-admin-humoyun",
-        username: "humoyun_fjx",
-        fullName: "Khumoyun (Admin)",
-        role: "admin",
-        passwordHash: hashPassword("admin123"),
-        level: "B2",
-        xp: 250,
-        streak: 3,
-        lessonsCompleted: 8,
-        testsCompleted: 4,
-        wordsLearned: 35,
-        sentencesChecked: 12,
-        correctAnswers: 28,
-        incorrectAnswers: 2,
-        status: "active",
-        createdAt: new Date().toISOString(),
-        lastLoginAt: null,
-      };
-      saveUsers([adminUser]);
-      return [adminUser];
+      const defaults = getDefaultUsers();
+      saveUsers(defaults);
+      return defaults;
     }
+    inMemoryUsers = parsed;
     return parsed;
-  } catch {
-    return [];
+  } catch (err) {
+    console.warn("Could not read users file, using memory fallback:", err);
+    if (!inMemoryUsers || inMemoryUsers.length === 0) {
+      inMemoryUsers = getDefaultUsers();
+    }
+    return inMemoryUsers;
   }
 }
 
 function saveUsers(users: StoredUser[]): void {
-  ensureDataDir();
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
+  inMemoryUsers = users;
+  try {
+    ensureDataDir();
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("Could not save users to disk, held in memory:", err);
+  }
 }
 
 export function toSafeUser(user: StoredUser): SafeUser {
