@@ -1,0 +1,21 @@
+[
+  {
+    "id": "usr-admin-humoyun",
+    "username": "humoyun_fjx",
+    "fullName": "Khumoyun (Admin)",
+    "role": "admin",
+    "passwordHash": "8dc68f0cb982fc73743ee6b885d8edff:fa75e375fd9470e509a9979186ae9677036e7da21ef3a44e5cb6cb7a983fe97ac62c27d954b72b835f0cbecdaf32c6d249f28d94a04d50e652e1501d1e7df46e",
+    "level": "B2",
+    "xp": 250,
+    "streak": 3,
+    "lessonsCompleted": 8,
+    "testsCompleted": 4,
+    "wordsLearned": 35,
+    "sentencesChecked": 12,
+    "correctAnswers": 28,
+    "incorrectAnswers": 2,
+    "status": "active",
+    "createdAt": "2026-09-18T08:35:09.236Z",
+    "lastLoginAt": "2026-09-18T08:37:47.129Z"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "name": "ILMHUB English Coach",
+  "description": "Comprehensive English learning platform created for ILMHUB ENGLISH by KHUMOYUN with instant sentence corrections, daily challenges, CEFR level adaptation, interactive quizzes, vocabulary vault, and grammar mastery.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
